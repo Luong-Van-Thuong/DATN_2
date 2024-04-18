@@ -4,7 +4,9 @@ import sqlite3
 import cv2
 from datetime import datetime
 from PIL import Image
-import subprocess
+import tkinter as tk
+from tkinter import ttk
+from PIL import Image
 
 # import face_recognition
 # LỆNH TẠO MÔI TRƯỜNG ẢO:         python -m venv evn            (evn: Tôi môi trường có thể thay đổi)
@@ -213,36 +215,44 @@ def chamCong():
         ret, frame = cap.read()
         if not ret:
             break
+
         (h, w) = frame.shape[:2]
         blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 1.0, (300, 300), (104.0, 177.0, 123.0))
+
         net.setInput(blob)
         detections = net.forward()
+
         for i in range(0, detections.shape[2]):
             confidence = detections[0, 0, i, 2]
+
             if confidence > 0.5:
                 box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
                 (startX, startY, endX, endY) = box.astype("int")
+
                 face = frame[startY:endY, startX:endX]
                 # gray = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
+
                 if face is not None and not face.size == 0:
                     gray = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
                     nbr_predicted, conf = recognizer.predict(gray)
                     print("Do trinh xac mo hinh: ", conf)
-                    if 10< conf < 40:   
+                    if 10< conf < 50:   
                         profile = getProfile(nbr_predicted)
                         if profile is not None:
                             cv2.putText(frame, "" + "ID:" + str(profile[0]) + " " + str(profile[1]) , (startX + 10, startY), font, 1, (0, 255, 0), 1)
+                            print(str(profile[0]) + " " + str(profile[1]))
                             luuHayKhongLuu == 1;
                     else:
+                        print("khong biet")
                         cv2.putText(frame, "Unknown", (startX, startY + h + 30), font, 0.4, (0, 255, 0), 1)
                 else:
                     # Xử lý khi không phát hiện được khuôn mặt
                     continue  # hoặc thêm mã xử lý khác tùy theo yêu cầu của bạn
             # else:
             #     continue
-        cv2.imshow('Frame', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+            cv2.imshow('Frame', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
     if(luuHayKhongLuu == 1):
         luuThoiGianChamCong(profile[0])
         print("CHẤM CÔNG THÀNH CÔNG")
@@ -250,11 +260,60 @@ def chamCong():
         print("CHẤM CÔNG KHÔNG THÀNH CÔNG")
     cap.release()
     cv2.destroyAllWindows()
-    
-# themMoiNhanVien()
-# training()
-chamCong()
 
+
+# Thá»±c hiá»‡n hÃ m cháº¡y 
+win = tk.Tk()
+
+win.title("He thong nhan dien khuon mat")
+win.geometry('500x300')
+win.configure(bg='#000000')
+label = ttk.Label(win,text="He thong nhan dien khuon mat",background="grey",foreground="white",font=20)
+label.grid(column =1, row =0)
+label.place(x=100)
+
+label1 = ttk.Label(win,text="Nhap thong tin nguoi dung",background="#263D42",foreground="white", font=20)  
+label1.grid(column =1, row =2)
+label1.place(y=40)
+
+label1 = ttk.Label(win,text="Id:",background="#263D42",foreground="white", font=20)  
+label1.grid(column =0, row =2)
+label1.place(y=80)
+
+label2 = ttk.Label(win,text="Name:",background="#263D42",foreground="white", font=20)
+label2.grid(column =0, row =3)
+label2.place(y=120)
+
+# Táº¡o biáº¿n kiá»ƒu IntVar
+int1 =tk.IntVar()
+edit_id=ttk.Entry(win,textvariable=int1, width=50)
+edit_id.grid(column =1, row =2)
+edit_id.focus()
+edit_id.place(x=90,y=80)
+
+# Táº¡o biáº¿n kiá»ƒu StringVar
+str1 =tk.StringVar()
+edit_name=ttk.Entry(win,textvariable=str1,width=50)
+edit_name.grid(column =1, row =3)
+edit_name.place(x=90,y=120)
+
+# NÃºt nháº¥n láº¥y dá»¯ liá»‡u
+btlaydulieu= ttk.Button(win, text ="Them nhan vien", command=themMoiNhanVien)
+btlaydulieu.grid(column =0, row =4)
+
+#  NÃºt nháº¥n train dá»¯ liá»‡u
+bttrain= ttk.Button(win, text ="Training", command=training)
+bttrain.grid(column =1, row =4)
+
+# # NÃºt nháº¥n nháº­n diá»‡n dá»¯ liá»‡u
+btnhandien= ttk.Button(win, text ="Cham cong", command=chamCong)
+btnhandien.grid(column =2, row =4)  
+
+bttrain.place(x=200,y=200)
+btnhandien.place(x=350,y=200)
+btlaydulieu.place(x=50,y=200)
+
+win.mainloop()
 
 
 
